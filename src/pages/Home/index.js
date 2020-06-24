@@ -1,8 +1,11 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
 import { MdAddShoppingCart } from 'react-icons/md';
 import { formatPrice } from '../../util/format';
 import api from '../../services/api';
+
+import * as CartActions from '../../store/modules/cart/actions';
 
 import { Button } from '../../components/Button';
 import { ProductList } from './styles';
@@ -27,17 +30,15 @@ class Home extends Component {
     this.setState({ products: data });
   }
 
-  handleAddProduct = product => {
-    const { dispatch } = this.props;
+  handleAddProduct = (product) => {
+    const { addToCart } = this.props;
 
-    dispatch({
-      type: 'ADD_TO_CART',
-      product,
-    });
+    addToCart(product);
   };
 
   render() {
     const { products } = this.state;
+    const { amount } = this.props;
 
     return (
       <ProductList>
@@ -47,9 +48,13 @@ class Home extends Component {
             <strong>{product.title}</strong>
             <span>{product.priceFormatted}</span>
 
-            <Button type="button" onClick={() => this.handleAddProduct(product)}>
+            <Button
+              type="button"
+              onClick={() => this.handleAddProduct(product)}
+            >
               <div>
-                <MdAddShoppingCart sise={16} color="#FFF" /> 3
+                <MdAddShoppingCart sise={16} color="#FFF" />
+                {amount[product.id] || 0}
               </div>
 
               <span>ADICIONAR AO CARRINHO</span>
@@ -61,4 +66,17 @@ class Home extends Component {
   }
 }
 
-export default connect()(Home);
+const mapStateToProps = (state) => ({
+  amount: state.cart.reduce((amount, product) => {
+    amount[product.id] = product.amount || 0;
+
+    return amount;
+  }, {}),
+});
+
+/* Converte ações do redux, actions,
+em propriedades dentro do componente */
+const mapDispatchToProps = (dispatch) =>
+  bindActionCreators(CartActions, dispatch);
+
+export default connect(mapStateToProps, mapDispatchToProps)(Home);
