@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { MdAddShoppingCart } from 'react-icons/md';
 import { formatPrice } from '../../util/format';
 import api from '../../services/api';
@@ -10,8 +9,16 @@ import * as CartActions from '../../store/modules/cart/actions';
 import { Button } from '../../components/Button';
 import { ProductList } from './styles';
 
-function Home({ amount, addToCartRequest }) {
+function Home() {
   const [products, setProducts] = useState([]);
+  const amount = useSelector((state) =>
+    state.cart.reduce((sumAmount, product) => {
+      sumAmount[product.id] = product.amount || 0;
+
+      return sumAmount;
+    }, {})
+  );
+  const dispatch = useDispatch();
 
   // replace componentDidMount
   useEffect(() => {
@@ -30,7 +37,7 @@ function Home({ amount, addToCartRequest }) {
   }, []);
 
   function handleAddProduct(id) {
-    addToCartRequest(id);
+    dispatch(CartActions.addToCartRequest(id));
   }
 
   return (
@@ -55,17 +62,4 @@ function Home({ amount, addToCartRequest }) {
   );
 }
 
-const mapStateToProps = (state) => ({
-  amount: state.cart.reduce((amount, product) => {
-    amount[product.id] = product.amount || 0;
-
-    return amount;
-  }, {}),
-});
-
-/* Converte ações do redux, actions,
-em propriedades dentro do componente */
-const mapDispatchToProps = (dispatch) =>
-  bindActionCreators(CartActions, dispatch);
-
-export default connect(mapStateToProps, mapDispatchToProps)(Home);
+export default Home;
